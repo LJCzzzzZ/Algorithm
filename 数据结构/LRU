@@ -1,0 +1,69 @@
+class Node{
+public:
+    int key, val;
+    Node *pre;
+    Node *next;
+    Node(int k, int v) : key(k), val(v) {}
+};
+
+class LRUCache {
+private:
+    int cap;
+    Node* cur;
+    unordered_map<int, Node*> mp;
+    void remove(Node* node){
+        node->pre->next = node->next;
+        node->next->pre = node->pre;
+    }
+    void push_front(Node* node){
+        node->pre = cur;
+        node->next = cur->next;
+        node->pre->next = node;
+        node->next->pre = node;
+    }
+    Node* getNode(int key){
+        auto it = mp.find(key);
+        if(it == mp.end()){
+            return nullptr;
+        }
+        auto node = it->second;
+        remove(node);
+        push_front(node);
+        return node;
+    }
+
+public:
+    LRUCache(int capacity) : cap(capacity), cur(new Node(0, 0)) {
+        cap = capacity;
+        cur->next = cur;
+        cur->pre = cur;
+    }
+    
+    int get(int key) {
+        auto node = getNode(key);
+        return node ? node->val : -1;
+    }
+    
+    void put(int key, int value) {
+        auto node = getNode(key);
+        if(node != nullptr){
+            node->val = value;
+            return;
+        }
+        mp[key] = new Node(key, value);
+        push_front(mp[key]);
+        if(mp.size() > cap){
+            auto back = cur->pre;
+            mp.erase(back->key);
+            remove(back);
+            delete back;
+        }
+    }
+};
+
+/**
+ * Your LRUCache object will be instantiated and called as such:
+ * LRUCache* obj = new LRUCache(capacity);
+ * int param_1 = obj->get(key);
+ * obj->put(key,value);
+ */
